@@ -45,9 +45,12 @@ import esolang.level0_arithmetic
 
 grammar = esolang.level0_arithmetic.grammar + r"""
     %extend start: start (";" start)*
+        | /#.*/                -> comment
         | assign_var
         | block
-        | /#.*/                -> comment
+        | COMPARISON_OPERATOR
+        | comparison
+        | condition
         | if_statement
         |
 
@@ -64,13 +67,17 @@ grammar = esolang.level0_arithmetic.grammar + r"""
     # and all non-zero is False
     # semantics of the C language / Unix terminal
 
-    if_statement: condition "?" start ":" start
-
-    ?condition: start
+    assign_var: NAME "=" start
 
     block: "{" start* "}"
 
-    assign_var: NAME "=" start
+    COMPARISON_OPERATOR: ">" | "<" | ">=" | "<=" | "==" | "!="
+    
+    comparison: start COMPARISON_OPERATOR start
+
+    ?condition: start
+
+    if_statement: condition "?" start ":" start
 
     NAME: /[_a-zA-Z][_a-zA-Z0-9]*/
 
@@ -120,6 +127,38 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
     2
     >>> interpreter.visit(parser.parse("a=2; b=1; a-b ? 2 : 3"))
     3
+    >>> interpreter.visit(parser.parse("1 > 0"))
+    0
+    >>> interpreter.visit(parser.parse("0 > 1"))
+    1
+    >>> interpreter.visit(parser.parse("1 < 0"))
+    1
+    >>> interpreter.visit(parser.parse("0 < 1"))
+    0
+    >>> interpreter.visit(parser.parse("1 == 1"))
+    0
+    >>> interpreter.visit(parser.parse("1 == 0"))
+    1
+    >>> interpreter.visit(parser.parse("1 != 0"))
+    0
+    >>> interpreter.visit(parser.parse("1 != 1"))
+    1
+    >>> interpreter.visit(parser.parse("1 >= 0"))
+    0
+    >>> interpreter.visit(parser.parse("0 >= 1"))
+    1
+    >>> interpreter.visit(parser.parse("1 >= 1"))
+    0
+    >>> interpreter.visit(parser.parse("0 <= 1"))
+    0
+    >>> interpreter.visit(parser.parse("1 <= 0"))
+    1
+    >>> interpreter.visit(parser.parse("1 <= 1"))
+    0
+    >>> interpreter.visit(parser.parse("a = 0; { a == 0 } ? 2 : 3"))
+    2
+    >>> interpreter.visit(parser.parse("a = 0; { a == 1 } ? 2 : 3"))
+    3
     '''
     def __init__(self):
         self.stack = [{}]
@@ -138,15 +177,6 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
         self.stack[-1][name] = value
         return value
 
-    def if_statement(self, tree):
-        condition = self.visit(tree.children[0])
-        if condition == 0:
-            branch_true = self.visit(tree.children[1])
-            return branch_true
-        else:
-            branch_false = self.visit(tree.children[2])
-            return branch_false
-
     def assign_var(self, tree):
         name = tree.children[0].value
         value = self.visit(tree.children[1])
@@ -162,6 +192,25 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
         res = self.visit(tree.children[0])
         self.stack.pop()
         return res
+
+    def if_statement(self, tree):
+        condition = self.visit(tree.children[0])
+        if condition == 0:
+            branch_true = self.visit(tree.children[1])
+            return branch_true
+        else:
+            branch_false = self.visit(tree.children[2])
+            return branch_false
+
+    def comparison(self, tree):
+        v1 = self.visit(tree.children[0])
+        op = tree.children[1].value
+        v2 = self.visit(tree.children[2])
+        if eval(str(v1) + op + str(v2)):
+            return 0
+        else:
+            return 1
+        pass
 
 # tree = parser.parse("1 ? 2 : 3")
 # interpreter = Interpreter()
