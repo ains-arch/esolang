@@ -48,7 +48,25 @@ grammar = esolang.level0_arithmetic.grammar + r"""
         | assign_var
         | block
         | /#.*/                -> comment
+        | if_statement
         |
+
+    # semantics
+    # the first start will be run if condition is true
+    # the second start if condition is false
+    # sometimes called "the ternary operator"
+    # C derived languages use this notation
+    # python doesn't do this, exactly - it's related to inline if
+
+    # we will not implement a boolean variable type
+    # conditionals represented by numbers
+    # where 0 is True
+    # and all non-zero is False
+    # semantics of the C language / Unix terminal
+
+    if_statement: condition "?" start ":" start
+
+    ?condition: start
 
     block: "{" start* "}"
 
@@ -84,6 +102,24 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
     Traceback (most recent call last):
         ...
     ValueError: Variable c undefined
+    >>> interpreter.visit(parser.parse("0 ? 2 : 3"))
+    2
+    >>> interpreter.visit(parser.parse("1 ? 2 : 3"))
+    3
+    >>> interpreter.visit(parser.parse("1-1 ? 2 : 3"))
+    2
+    >>> interpreter.visit(parser.parse("1-2 ? 2 : 3"))
+    3
+    >>> interpreter.visit(parser.parse("1-1 ? {a=2; a+3} : 3"))
+    5
+    >>> interpreter.visit(parser.parse("a = 0; a ? 2 : 3"))
+    2
+    >>> interpreter.visit(parser.parse("a = 10; a ? 2 : 3"))
+    3
+    >>> interpreter.visit(parser.parse("a=2; b=2; a-b ? 2 : 3"))
+    2
+    >>> interpreter.visit(parser.parse("a=2; b=1; a-b ? 2 : 3"))
+    3
     '''
     def __init__(self):
         self.stack = [{}]
@@ -102,6 +138,15 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
         self.stack[-1][name] = value
         return value
 
+    def if_statement(self, tree):
+        condition = self.visit(tree.children[0])
+        if condition == 0:
+            branch_true = self.visit(tree.children[1])
+            return branch_true
+        else:
+            branch_false = self.visit(tree.children[2])
+            return branch_false
+
     def assign_var(self, tree):
         name = tree.children[0].value
         value = self.visit(tree.children[1])
@@ -117,3 +162,6 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
         res = self.visit(tree.children[0])
         self.stack.pop()
         return res
+
+# tree = parser.parse("1 ? 2 : 3")
+# interpreter = Interpreter()
