@@ -55,6 +55,17 @@ class Interpreter(esolang.level2_loops.Interpreter):
     2
     >>> interpreter.visit(parser.parse("1 ? print(2) : print(3)"))
     3
+    >>> interpreter.visit(parser.parse("a=10; for i in range(a) { print(i) }"))
+    0
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+    9
     '''
     def __init__(self):
         super().__init__()
