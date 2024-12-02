@@ -1,4 +1,10 @@
 '''
+"""
+Level 1: Statements
+
+Extends the arithmetic interpreter to support variable assignment, scoping, 
+comparison operators, and conditional (ternary) expressions. This level introduces 
+basic control flow mechanisms.
 
 The following tests show example strings in the language.
 There are no meaningful commands at this point,
@@ -37,6 +43,16 @@ Traceback (most recent call last):
     ...
 lark.exceptions.UnexpectedEOF:
 
+Semantics of `if_statement: condition "?" start ":" start`
+The first start will be run if condition is true.
+The second start if condition is false.
+This is sometimes called "the ternary operator."
+C derived languages use this notation.
+Python doesn't do this, exactly but it's similar to inline if.
+
+We do not implement a boolean variable type.
+Conditionals are represented by numbers where 0 is True and all non-zero is False.
+This follows the semantics of the C language / Unix terminal.
 '''
 
 import lark
@@ -53,19 +69,6 @@ grammar = esolang.level0_arithmetic.grammar + r"""
         | condition
         | if_statement
         |
-
-    # semantics
-    # the first start will be run if condition is true
-    # the second start if condition is false
-    # sometimes called "the ternary operator"
-    # C derived languages use this notation
-    # python doesn't do this, exactly - it's related to inline if
-
-    # we will not implement a boolean variable type
-    # conditionals represented by numbers
-    # where 0 is True
-    # and all non-zero is False
-    # semantics of the C language / Unix terminal
 
     assign_var: NAME "=" start
 
@@ -211,6 +214,3 @@ class Interpreter(esolang.level0_arithmetic.Interpreter):
         else:
             return 1
         pass
-
-# tree = parser.parse("1 ? 2 : 3")
-# interpreter = Interpreter()

@@ -1,5 +1,13 @@
-import lark
+"""
+Level 0: Arithmetic Expressions
 
+This module defines the grammar and interpreter for basic arithmetic operations. 
+It supports addition, subtraction, multiplication, and division, as well as 
+parenthesized expressions. The interpreter evaluates expressions, and the 
+transformer simplifies them.
+"""
+
+import lark
 
 grammar = r"""
     start: sum

@@ -1,3 +1,10 @@
+"""
+Level 2: Loops
+
+Introduces loops (for and while) and ranges. This level adds iteration constructs 
+to the interpreter, building on variable assignment and block scoping from level 1.
+"""
+
 import lark
 import esolang.level1_statements
 
