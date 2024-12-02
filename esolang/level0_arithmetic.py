@@ -9,6 +9,7 @@ transformer simplifies them.
 
 import lark
 
+
 grammar = r"""
     start: sum
 
@@ -16,12 +17,17 @@ grammar = r"""
         | sum "+" product   -> add
         | sum "-" product   -> sub
 
-    ?product: atom
-        | product "*" atom  -> mul
-        | product "/" atom  -> div
+    ?product: exponentiation
+        | product "*" exponentiation     -> mul
+        | product "/" exponentiation     -> div
+        | product "%" exponentiation     -> mod
+        | product "(" start ")"          -> mul
+
+    ?exponentiation: atom
+        | exponentiation "**" atom       -> exp
 
     ?atom: NUMBER           -> number
-        | "(" sum ")"       -> paren
+        | "(" start ")"     -> paren
 
     NUMBER: /-?[0-9]+/
 
@@ -80,6 +86,16 @@ class Interpreter(lark.visitors.Interpreter):
         v1 = self.visit(tree.children[1])
         return v0 // v1
 
+    def mod(self, tree):
+        v0 = self.visit(tree.children[0])
+        v1 = self.visit(tree.children[1])
+        return v0 % v1
+
+    def exp(self, tree):
+        v0 = self.visit(tree.children[0])
+        v1 = self.visit(tree.children[1])
+        return round(v0 ** v1)
+
     def paren(self, tree):
         return self.visit(tree.children[0])
 
@@ -124,6 +140,12 @@ class Simplifier(lark.Transformer):
 
     def div(self, xs):
         return xs[0] // xs[1]
+
+    def mod(self, children):
+        return children[0] % children[1]
+
+    def exp(self, children):
+        return round(children[0] ** children[1])
 
     def paren(self, xs):
         return xs[0]
